@@ -5,18 +5,24 @@ import Prelude
 import Data.Array (null)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
-import Halogen (Component, defaultEval, mkComponent, mkEval, modify_)
+import Data.Symbol (SProxy(..))
+import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, put)
 import Halogen.HTML as H
-import Hasyr.Task.Apis (class ManageTasks, getAllTasks)
-import Hasyr.Task.Types (Tasks)
-import Network.RemoteData (RemoteData(..), fromEither)
+import Hasyr.AppM (AppM)
+import Hasyr.Task.AddTask as AddTask
+import Hasyr.Task.Apis (getAllTasks)
+import Hasyr.Task.Types (Tasks, Task)
+import Network.RemoteData (RemoteData(..))
+import Network.RemoteData as RD
 
 type State =
-  { tasks :: RemoteData String Tasks }
+  { tasksRD :: RemoteData String Tasks
+  , tasks :: Tasks
+  }
 
-data Action = Init | FetchTasks
+data Action = Init | FetchTasks | AddTask Task
 
-component :: ∀ m. ManageTasks m => Component H.HTML (Const Void) {} {} m
+component :: Component H.HTML (Const Void) {} {} AppM
 component = mkComponent
   { initialState
   , eval: mkEval $ defaultEval
@@ -26,28 +32,39 @@ component = mkComponent
   , render
   } where
 
-  initialState _ = { tasks: NotAsked }
+  initialState _ = { tasksRD: NotAsked, tasks: [] }
 
   handleAction Init = do
     handleAction FetchTasks
-
   handleAction FetchTasks = do
-    modify_ (_ { tasks = Loading })
-    tasks <- getAllTasks
-    modify_ (_ { tasks = fromEither tasks })
+    modify_ (_ { tasksRD = Loading })
+    tasksRD <- RD.fromEither <$> getAllTasks
+    st <- get
+    let mergedTasks = RD.maybe st.tasks (\tasks' -> st.tasks <> tasks') tasksRD
+    put $ st { tasksRD = tasksRD, tasks = mergedTasks }
+  handleAction (AddTask task) = do
+    st <- get
+    put $ st { tasks = st.tasks <> [task] }
 
   render state =
     H.section_ [
-      renderItem state.tasks
+      H.slot _addTask unit AddTask.component {} onNewTaskAdded,
+      renderItem state
     ]
 
-renderItem :: ∀ p a. RemoteData String Tasks -> H.HTML p a
-renderItem = case _ of
+_addTask = SProxy :: _ "addTask"
+
+onNewTaskAdded :: AddTask.Output -> Maybe Action
+onNewTaskAdded (AddTask.NewTaskAdded task) = Just $ AddTask task
+onNewTaskAdded _ = Nothing
+
+renderItem :: ∀ p a. State -> H.HTML p a
+renderItem { tasksRD, tasks } = case tasksRD of
   NotAsked   -> H.text "No items yet"
   Loading    -> H.text "Loading..."
   Failure e  -> H.text $ "Oops, an error occurred: " <> e
   Success t
     | null t -> H.text "No tasks yet"
-  Success ts ->
+  Success _ ->
     H.ul_ $
-      ts <#> \task -> H.li_ [ H.text task.name ]
+      tasks <#> \task -> H.li_ [ H.text task.name ]
