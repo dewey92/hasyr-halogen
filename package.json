@@ -1,0 +1,19 @@
+{
+  "name": "hasyr-halogen",
+  "version": "0.0.1",
+  "description": "Simple todo-like app in Halogen",
+  "main": "index.js",
+  "author": "Jihad D. Waspada",
+  "license": "MIT",
+  "scripts": {
+    "serve": "parcel index.html",
+    "guard": "spago build --watch",
+    "dev": "spago build --watch & parcel index.html"
+  },
+  "devDependencies": {
+    "parcel": "^1.12.4"
+  },
+  "dependencies": {
+    "bulma-helpers": "^0.3.8"
+  }
+}
