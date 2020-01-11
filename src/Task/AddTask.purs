@@ -19,8 +19,8 @@ import Web.UIEvent.KeyboardEvent as KE
 type State = String -- the input value
 
 data Action
-  = UpdateInput String
-  | DetectKeyUp KE.KeyboardEvent
+  = UpdateInputAdd String
+  | DetectKeyUpAdd KE.KeyboardEvent
   | ResetInput
 
 data Output = NewTaskAdded Task
@@ -32,9 +32,8 @@ component = mkComponent
   , render
   } where
 
-  handleAction (UpdateInput val) = do
-    put val
-  handleAction (DetectKeyUp e) = when (KE.key e == "Enter") do
+  handleAction (UpdateInputAdd val) = put val
+  handleAction (DetectKeyUpAdd e) = when (KE.key e == "Enter") do
     newTask <- get
     (Milliseconds ms) <- liftEffect $ nowDateTime <#> (fromDateTime >>> unInstant)
     handleAction ResetInput
@@ -48,7 +47,7 @@ component = mkComponent
         P.value inputValue,
         P.placeholder "What needs to be done",
         P.autofocus true,
-        E.onValueChange (Just <<< UpdateInput),
-        E.onKeyUp (Just <<< DetectKeyUp)
+        E.onValueChange (Just <<< UpdateInputAdd),
+        E.onKeyUp (Just <<< DetectKeyUpAdd)
       ]
     ]

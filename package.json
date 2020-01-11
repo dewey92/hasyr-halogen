@@ -11,7 +11,8 @@
     "dev": "spago build --watch & parcel index.html"
   },
   "devDependencies": {
-    "parcel": "^1.12.4"
+    "parcel": "^1.12.4",
+    "sass": "^1.24.4"
   },
   "dependencies": {
     "bulma-helpers": "^0.3.8"

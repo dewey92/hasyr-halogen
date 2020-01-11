@@ -11,6 +11,7 @@ import Halogen.HTML as H
 import Hasyr.AppM (AppM)
 import Hasyr.Task.AddTask as AddTask
 import Hasyr.Task.Apis (getAllTasks)
+import Hasyr.Task.TaskItem as TaskItem
 import Hasyr.Task.Types (Tasks, Task)
 import Network.RemoteData (RemoteData(..))
 import Network.RemoteData as RD
@@ -20,7 +21,7 @@ type State =
   , tasks :: Tasks
   }
 
-data Action = Init | FetchTasks | AddTask Task
+data Action = Init | FetchTasks | AddTask Task | EditTask Task
 
 component :: Component H.HTML (Const Void) {} {} AppM
 component = mkComponent
@@ -45,20 +46,27 @@ component = mkComponent
   handleAction (AddTask task) = do
     st <- get
     put $ st { tasks = st.tasks <> [task] }
+  handleAction (EditTask task) = do
+    { tasks } <- get
+    let newTasks = tasks <#> \t -> if t.id == task.id then task else t
+    modify_ (_ { tasks = newTasks })
 
   render state =
     H.section_ [
-      H.slot _addTask unit AddTask.component {} onNewTaskAdded,
+      H.slot _addTask unit AddTask.component {} handleAddTaskOutput,
       renderItem state
     ]
 
 _addTask = SProxy :: _ "addTask"
+_taskItem = SProxy :: _ "taskItem"
 
-onNewTaskAdded :: AddTask.Output -> Maybe Action
-onNewTaskAdded (AddTask.NewTaskAdded task) = Just $ AddTask task
-onNewTaskAdded _ = Nothing
+handleAddTaskOutput :: AddTask.Output -> Maybe Action
+handleAddTaskOutput (AddTask.NewTaskAdded task) = Just $ AddTask task
 
-renderItem :: ∀ p a. State -> H.HTML p a
+handleTaskItemOutput :: TaskItem.Output -> Maybe Action
+handleTaskItemOutput (TaskItem.TaskEdited task) = Just $ EditTask task
+
+renderItem :: State -> H.HTML _ Action
 renderItem { tasksRD, tasks } = case tasksRD of
   NotAsked   -> H.text "No items yet"
   Loading    -> H.text "Loading..."
@@ -67,4 +75,4 @@ renderItem { tasksRD, tasks } = case tasksRD of
     | null t -> H.text "No tasks yet"
   Success _ ->
     H.ul_ $
-      tasks <#> \task -> H.li_ [ H.text task.name ]
+      tasks <#> \task -> H.slot _taskItem task.id TaskItem.component task handleTaskItemOutput
