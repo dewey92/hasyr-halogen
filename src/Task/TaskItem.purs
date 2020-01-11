@@ -38,21 +38,22 @@ component = mkComponent
 
   handleReceive = Just <<< ReplaceTaskFromParent
 
-  handleAction StartEditing = modify_ _{ isEditing = true }
-  handleAction (UpdateInputEdit val) = modify_ _{ inputValue = val }
-  handleAction (DetectKeyUpEdit e)
-    | KE.key e == "Esc" = handleAction CancelEditing
-    | KE.key e == "Enter" = do
-      { inputValue } <- get
-      handleAction (UpdateTaskName inputValue)
-  handleAction (UpdateTaskName newName) = do
-    { task } <- get
-    logShow $ "Saving " <> newName -- TODO: Call endpoint!
-    handleAction CancelEditing
-    raise $ TaskEdited { id: task.id, name: newName }
-  handleAction CancelEditing = modify_ _{ isEditing = false }
-  handleAction (ReplaceTaskFromParent task) = modify_ _{ task = task }
-  handleAction _ = pure unit -- TODO: Delete task!
+  handleAction = case _ of
+    StartEditing -> modify_ _{ isEditing = true }
+    UpdateInputEdit val -> modify_ _{ inputValue = val }
+    DetectKeyUpEdit e
+      | KE.key e == "Esc"   -> handleAction CancelEditing
+      | KE.key e == "Enter" -> do
+        { inputValue } <- get
+        handleAction (UpdateTaskName inputValue)
+    UpdateTaskName newName -> do
+      { task } <- get
+      logShow $ "Saving " <> newName -- TODO: Call endpoint!
+      handleAction CancelEditing
+      raise $ TaskEdited { id: task.id, name: newName }
+    CancelEditing -> modify_ _{ isEditing = false }
+    ReplaceTaskFromParent task -> modify_ _{ task = task }
+    _ -> pure unit
 
   render { task, isEditing, inputValue } =
     H.li_ [

@@ -35,18 +35,19 @@ component = mkComponent
 
   initialState _ = { tasksRD: NotAsked, tasks: [] }
 
-  handleAction Init = handleAction FetchTasks
-  handleAction FetchTasks = do
-    modify_ _{ tasksRD = Loading }
-    tasksRD <- RD.fromEither <$> getAllTasks
-    st <- get
-    let mergedTasks = RD.maybe st.tasks (st.tasks <> _) tasksRD
-    put $ st { tasksRD = tasksRD, tasks = mergedTasks }
-  handleAction (AddTask task) = modify_ (\st -> st { tasks = st.tasks <> [task] })
-  handleAction (EditTask task) = do
-    { tasks } <- get
-    let newTasks = tasks <#> \t -> if t.id == task.id then task else t
-    modify_ _{ tasks = newTasks }
+  handleAction = case _ of
+    Init -> handleAction FetchTasks
+    FetchTasks -> do
+      modify_ _{ tasksRD = Loading }
+      tasksRD <- RD.fromEither <$> getAllTasks
+      st <- get
+      let mergedTasks = RD.maybe st.tasks (st.tasks <> _) tasksRD
+      put $ st { tasksRD = tasksRD, tasks = mergedTasks }
+    AddTask task -> modify_ (\st -> st { tasks = st.tasks <> [task] })
+    EditTask task -> do
+      { tasks } <- get
+      let newTasks = tasks <#> \t -> if t.id == task.id then task else t
+      modify_ _{ tasks = newTasks }
 
   render state =
     H.section_ [
@@ -54,8 +55,8 @@ component = mkComponent
       renderItem state
     ]
 
-_addTask = SProxy :: _ "addTask"
-_taskItem = SProxy :: _ "taskItem"
+_addTask = SProxy :: SProxy "addTask"
+_taskItem = SProxy :: SProxy "taskItem"
 
 handleAddTaskOutput :: AddTask.Output -> Maybe Action
 handleAddTaskOutput (AddTask.NewTaskAdded task) = Just $ AddTask task

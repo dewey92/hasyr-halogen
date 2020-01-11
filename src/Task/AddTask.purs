@@ -4,75 +4,59 @@ import Prelude
 
 import Data.Const (Const)
 import Data.Maybe (Maybe(..), fromJust)
+import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..), delay)
 import Effect.Aff.Class (liftAff)
 import Effect.Class.Console (errorShow)
-import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, raise)
+import Halogen (Component, defaultEval, mkComponent, mkEval, modify_, query, raise, tell)
 import Halogen.HTML as H
-import Halogen.HTML.Events as E
-import Halogen.HTML.Properties as P
 import Hasyr.AppM (AppM)
+import Hasyr.Components.AsyncInput as AsyncInput
 import Hasyr.Task.Apis (addTask)
 import Hasyr.Task.Types (Task)
-import Hasyr.Utils.HTML (className, (<:>))
-import Network.RemoteData (RemoteData(..), isLoading, isSuccess)
+import Network.RemoteData (RemoteData(..), isSuccess)
 import Network.RemoteData as RD
 import Partial.Unsafe (unsafePartial)
-import Web.UIEvent.KeyboardEvent as KE
 
-type State = { inputValue :: String, addTaskRD :: RD.RemoteData String Task }
+type State = { addTaskRD :: RD.RemoteData String Task }
 
-data Action
-  = UpdateInputAdd String
-  | DetectKeyUpAdd KE.KeyboardEvent
-  | ResetInput
+data Action = AddNewTask String
 
 data Output = NewTaskAdded Task
 
 component :: Component H.HTML (Const Void) {} Output AppM
 component = mkComponent
-  { initialState: const { inputValue: "", addTaskRD: NotAsked }
+  { initialState: const { addTaskRD: NotAsked }
   , eval: mkEval $ defaultEval { handleAction = handleAction }
   , render
   } where
 
-  handleAction (UpdateInputAdd val) = modify_ _{ inputValue = val }
-  handleAction (DetectKeyUpAdd e) = when (KE.key e == "Enter") do
+  handleAction (AddNewTask newTaskName) = do
     modify_ _{ addTaskRD = Loading }
-    { inputValue: newTaskName } <- get
     newTaskRD <- RD.fromEither <$> addTask newTaskName
     modify_ _{ addTaskRD = newTaskRD }
     if isSuccess newTaskRD
     then do
       let newTask = unsafePartial $ fromJust $ RD.toMaybe newTaskRD
-      handleAction ResetInput
+      void $ query _asyncInput unit $ tell AsyncInput.ResetInput
       raise $ NewTaskAdded newTask
       liftAff $ delay (Milliseconds 2000.0)
       modify_ _{ addTaskRD = NotAsked }
     else do
       errorShow "Error!!"
-  handleAction ResetInput = modify_ _{ inputValue = "" }
 
-  render { inputValue, addTaskRD } =
+  render { addTaskRD } =
     H.section_ [
-      H.div [className $ "control has-icons-right" <:> cxControl addTaskRD] [
-        H.input [
-          className $ "input" <:> cxInput addTaskRD,
-          P.value inputValue,
-          P.placeholder "What needs to be done",
-          P.autofocus true,
-          P.disabled (isLoading addTaskRD),
-          E.onValueChange (Just <<< UpdateInputAdd),
-          E.onKeyUp (Just <<< DetectKeyUpAdd)
-        ],
-        if isSuccess addTaskRD
-        then H.span [className "icon is-small is-right"] [H.i [className "fas fa-check"] []]
-        else H.text ""
-      ]
+      H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
     ] where
-    cxInput (Success s) = "is-success"
-    cxInput (Failure s) = "is-danger"
-    cxInput _ = ""
+    asyncInputProps = {
+      name: "add-new-task",
+      placeholder: "What needs to be done?",
+      initialValue: "",
+      asyncStatus: addTaskRD
+    }
 
-    cxControl (Loading) = "is-loading"
-    cxControl _ = ""
+_asyncInput = SProxy :: SProxy "asyncInput"
+
+handleAsyncInputOutput :: AsyncInput.Output -> Maybe Action
+handleAsyncInputOutput (AsyncInput.EnterPressed val) = Just $ AddNewTask val

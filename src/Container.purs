@@ -11,7 +11,7 @@ import Hasyr.AppM (AppM)
 import Hasyr.Task.TaskList as TaskList
 import Hasyr.Utils.HTML (className)
 
-_taskList = SProxy :: _ "taskList"
+_taskList = SProxy :: SProxy "taskList"
 
 component :: Component H.HTML (Const Void) {} {} AppM
 component = mkComponent
