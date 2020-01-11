@@ -14,10 +14,7 @@ import Hasyr.Task.Types (Task)
 import Hasyr.Utils.HTML (className, onClick_)
 import Web.UIEvent.KeyboardEvent as KE
 
-type State =
-  { isEditing :: Boolean
-  , inputValue :: String
-  }
+type State = { isEditing :: Boolean , inputValue :: String }
 
 data Action
   = StartEditing
@@ -26,7 +23,7 @@ data Action
   | DetectKeyUpEdit KE.KeyboardEvent
   | SaveNewTaskName String
   | DeleteTask
-  | ReplaceTask Task
+  | ReplaceTaskFromParent Task
 
 data Output = TaskEdited Task
 
@@ -39,12 +36,10 @@ component = mkComponent
   , render
   } where
 
-  handleReceive = Just <<< ReplaceTask
+  handleReceive = Just <<< ReplaceTaskFromParent
 
-  handleAction StartEditing = do
-    modify_ (_ { isEditing = true })
-  handleAction (UpdateInputEdit val) = do
-    modify_ (_ { inputValue = val })
+  handleAction StartEditing = modify_ (_ { isEditing = true })
+  handleAction (UpdateInputEdit val) = modify_ (_ { inputValue = val })
   handleAction (DetectKeyUpEdit e)
     | KE.key e == "Esc" = handleAction CancelEditing
     | KE.key e == "Enter" = do
@@ -52,12 +47,11 @@ component = mkComponent
       handleAction (SaveNewTaskName inputValue)
   handleAction (SaveNewTaskName newName) = do
     { task } <- get
-    logShow $ "Saving " <> newName
+    logShow $ "Saving " <> newName -- TODO: Call endpoint!
     handleAction CancelEditing
     raise $ TaskEdited { id: task.id, name: newName }
-  handleAction CancelEditing = do
-    modify_ (_ { isEditing = false })
-  handleAction (ReplaceTask task) = modify_ (_ { task = task })
+  handleAction CancelEditing = modify_ (_ { isEditing = false })
+  handleAction (ReplaceTaskFromParent task) = modify_ (_ { task = task })
   handleAction _ = pure unit -- TODO: Delete task!
 
   render { task, isEditing, inputValue } =

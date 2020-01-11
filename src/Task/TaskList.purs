@@ -35,17 +35,14 @@ component = mkComponent
 
   initialState _ = { tasksRD: NotAsked, tasks: [] }
 
-  handleAction Init = do
-    handleAction FetchTasks
+  handleAction Init = handleAction FetchTasks
   handleAction FetchTasks = do
     modify_ (_ { tasksRD = Loading })
     tasksRD <- RD.fromEither <$> getAllTasks
     st <- get
     let mergedTasks = RD.maybe st.tasks (\tasks' -> st.tasks <> tasks') tasksRD
     put $ st { tasksRD = tasksRD, tasks = mergedTasks }
-  handleAction (AddTask task) = do
-    st <- get
-    put $ st { tasks = st.tasks <> [task] }
+  handleAction (AddTask task) = modify_ (\st -> st { tasks = st.tasks <> [task] })
   handleAction (EditTask task) = do
     { tasks } <- get
     let newTasks = tasks <#> \t -> if t.id == task.id then task else t
