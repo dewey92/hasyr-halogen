@@ -3,7 +3,7 @@ module Hasyr.Task.AddTask where
 import Prelude
 
 import Data.Const (Const)
-import Data.Maybe (Maybe(..), fromJust)
+import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..), delay)
 import Effect.Aff.Class (liftAff)
@@ -14,9 +14,8 @@ import Hasyr.AppM (AppM)
 import Hasyr.Components.AsyncInput as AsyncInput
 import Hasyr.Task.Apis (addTask)
 import Hasyr.Task.Types (Task)
-import Network.RemoteData (RemoteData(..), isSuccess)
+import Network.RemoteData (RemoteData(..))
 import Network.RemoteData as RD
-import Partial.Unsafe (unsafePartial)
 
 type State = { addTaskRD :: RD.RemoteData String Task }
 
@@ -35,15 +34,14 @@ component = mkComponent
     modify_ _{ addTaskRD = Loading }
     newTaskRD <- RD.fromEither <$> addTask newTaskName
     modify_ _{ addTaskRD = newTaskRD }
-    if isSuccess newTaskRD
-    then do
-      let newTask = unsafePartial $ fromJust $ RD.toMaybe newTaskRD
-      void $ query _asyncInput unit $ tell AsyncInput.ResetInput
-      raise $ NewTaskAdded newTask
-      liftAff $ delay (Milliseconds 2000.0)
-      modify_ _{ addTaskRD = NotAsked }
-    else do
-      errorShow "Error!!"
+    case newTaskRD of
+      Success newTask -> do
+        void $ query _asyncInput unit $ tell AsyncInput.ResetInput
+        raise $ NewTaskAdded newTask
+        liftAff $ delay (Milliseconds 2000.0)
+        modify_ _{ addTaskRD = NotAsked }
+      Failure e -> errorShow $ "Error: " <> e
+      _ -> pure unit
 
   render { addTaskRD } =
     H.section_ [
