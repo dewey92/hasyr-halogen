@@ -16,9 +16,9 @@ function main() {
 
 // HMR setup. For more info see: https://parceljs.org/hmr.html
 if (module.hot) {
-  // module.hot.dispose(function () {
-  //   document.querySelector('#app').innerHTML = '';
-  // });
+  module.hot.dispose(function () {
+    document.querySelector('#app').innerHTML = '';
+  });
 
   module.hot.accept(function () {
     console.log('Reloaded, running main again');

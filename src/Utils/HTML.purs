@@ -13,6 +13,11 @@ import Web.UIEvent.MouseEvent as ME
 className :: ∀ r i. String -> H.IProp ( class :: String | r ) i
 className = P.class_ <<< H.ClassName
 
+appendClassName :: String -> String -> String
+appendClassName a b = a <> " " <> b
+
+infixl 6 appendClassName as <:>
+
 -- | `onClick` but with `preventDefault` run by default.
 -- | I know it's not idiomatic PS, but I think it's still way simpler than
 -- | the solution proposed here:

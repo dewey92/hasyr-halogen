@@ -37,16 +37,16 @@ component = mkComponent
 
   handleAction Init = handleAction FetchTasks
   handleAction FetchTasks = do
-    modify_ (_ { tasksRD = Loading })
+    modify_ _{ tasksRD = Loading }
     tasksRD <- RD.fromEither <$> getAllTasks
     st <- get
-    let mergedTasks = RD.maybe st.tasks (\tasks' -> st.tasks <> tasks') tasksRD
+    let mergedTasks = RD.maybe st.tasks (st.tasks <> _) tasksRD
     put $ st { tasksRD = tasksRD, tasks = mergedTasks }
   handleAction (AddTask task) = modify_ (\st -> st { tasks = st.tasks <> [task] })
   handleAction (EditTask task) = do
     { tasks } <- get
     let newTasks = tasks <#> \t -> if t.id == task.id then task else t
-    modify_ (_ { tasks = newTasks })
+    modify_ _{ tasks = newTasks }
 
   render state =
     H.section_ [
