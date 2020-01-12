@@ -1,4 +1,4 @@
-module Hasyr.Task.TaskList where
+module Hasyr.Task.TaskList ( component ) where
 
 import Prelude
 

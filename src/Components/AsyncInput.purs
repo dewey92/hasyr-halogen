@@ -1,4 +1,8 @@
-module Hasyr.Components.AsyncInput where
+module Hasyr.Components.AsyncInput
+  ( Output(..)
+  , Query(..)
+  , component
+  ) where
 
 import Prelude
 
