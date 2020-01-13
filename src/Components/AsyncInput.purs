@@ -30,7 +30,7 @@ data Action e a
   | DetectKeyUp KE.KeyboardEvent
   | SyncState (Input e a)
 
-data Output = EnterPressed String
+data Output = EnterPressed String | EscPressed
 
 data Query q = ResetInput q
 
@@ -52,9 +52,12 @@ component = mkComponent
     SyncState { name, placeholder, asyncStatus } -> do
       modify_ _{ name = name, placeholder = placeholder, asyncStatus = asyncStatus }
     UpdateInput val -> modify_ _{ inputValue = val }
-    DetectKeyUp e -> when (KE.key e == "Enter") do
-      { inputValue } <- get
-      raise $ EnterPressed inputValue
+    DetectKeyUp e -> case KE.key e of
+      "Enter" -> do
+        { inputValue } <- get
+        raise $ EnterPressed inputValue
+      "Escape" -> raise EscPressed
+      _ -> pure unit
 
   handleQuery :: ∀ q. Query q -> HalogenM _ _ _ _ _ (_ q)
   handleQuery (ResetInput next) = do

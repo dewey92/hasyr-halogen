@@ -86,4 +86,6 @@ component = mkComponent
 _asyncInput = SProxy :: SProxy "asyncInput"
 
 handleAsyncInputOutput :: AsyncInput.Output -> Maybe Action
-handleAsyncInputOutput (AsyncInput.EnterPressed val) = Just $ UpdateTaskName val
+handleAsyncInputOutput = case _ of
+  AsyncInput.EnterPressed val -> Just $ UpdateTaskName val
+  AsyncInput.EscPressed -> Just CancelEditing
