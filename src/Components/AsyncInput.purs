@@ -7,7 +7,7 @@ module Hasyr.Components.AsyncInput
 import Prelude
 
 import Data.Maybe (Maybe(..))
-import Halogen (Component, HalogenM, defaultEval, get, mkComponent, mkEval, modify_, raise)
+import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, raise)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
@@ -59,7 +59,7 @@ component = mkComponent
       "Escape" -> raise EscPressed
       _ -> pure unit
 
-  handleQuery :: ∀ q. Query q -> HalogenM _ _ _ _ _ (_ q)
+  handleQuery :: ∀ q. Query q -> _ (_ q)
   handleQuery (ResetInput next) = do
     modify_ _{ inputValue = "" }
     pure (Just next)
