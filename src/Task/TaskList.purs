@@ -2,7 +2,7 @@ module Hasyr.Task.TaskList ( component ) where
 
 import Prelude
 
-import Data.Array (null)
+import Data.Array (filter, null)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
@@ -12,7 +12,7 @@ import Hasyr.AppM (AppM)
 import Hasyr.Task.AddTask as AddTask
 import Hasyr.Task.Apis (getAllTasks)
 import Hasyr.Task.TaskItem as TaskItem
-import Hasyr.Task.Types (Tasks, Task)
+import Hasyr.Task.Types (Task, Tasks, TaskId)
 import Network.RemoteData (RemoteData(..))
 import Network.RemoteData as RD
 
@@ -21,7 +21,7 @@ type State =
   , tasks :: Tasks
   }
 
-data Action = Init | FetchTasks | AddTask Task | EditTask Task
+data Action = Init | FetchTasks | AddTask Task | EditTask Task | DeleteTask TaskId
 
 component :: Component H.HTML (Const Void) {} {} AppM
 component = mkComponent
@@ -48,6 +48,10 @@ component = mkComponent
       { tasks } <- get
       let newTasks = tasks <#> \t -> if t.id == task.id then task else t
       modify_ _{ tasks = newTasks }
+    DeleteTask taskId -> do
+      { tasks } <- get
+      let newTasks = filter (_.id >>> notEq taskId) tasks
+      modify_ _{ tasks = newTasks }
 
   render state =
     H.section_ [
@@ -62,9 +66,11 @@ handleAddTaskOutput :: AddTask.Output -> Maybe Action
 handleAddTaskOutput (AddTask.NewTaskAdded task) = Just $ AddTask task
 
 handleTaskItemOutput :: TaskItem.Output -> Maybe Action
-handleTaskItemOutput (TaskItem.TaskEdited task) = Just $ EditTask task
+handleTaskItemOutput = case _ of
+  TaskItem.TaskEdited task -> Just $ EditTask task
+  TaskItem.TaskDeleted taskId -> Just $ DeleteTask taskId
 
-renderItem :: State -> H.HTML _ Action
+renderItem :: State -> _
 renderItem { tasksRD, tasks } = case tasksRD of
   NotAsked   -> H.text "No items yet"
   Loading    -> H.text "Loading..."

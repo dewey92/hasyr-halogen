@@ -36,3 +36,11 @@ ajaxPatch url payload = do
   pure $ do
     { body } <- lmap AX.printError rawResult
     pure body
+
+ajaxDelete :: AX.URL -> Aff (Either String Json)
+ajaxDelete url = do
+  rawResult <- AX.delete Format.json url
+  delay (Milliseconds 1500.0) -- not too fast, I want to show loading indicator
+  pure $ do
+    { body } <- lmap AX.printError rawResult
+    pure body
