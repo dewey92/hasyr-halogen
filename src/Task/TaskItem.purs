@@ -2,15 +2,18 @@ module Hasyr.Task.TaskItem ( Output(..), component ) where
 
 import Prelude
 
+import DOM.HTML.Indexed.InputType (InputType(..))
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Monoid (guard)
 import Data.Symbol (SProxy(..))
-import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, raise)
+import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify, modify_, raise)
 import Halogen.HTML as H
+import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import Hasyr.AppM (AppM)
 import Hasyr.Components.AsyncInput as AsyncInput
+import Hasyr.Components.Dropdown as Dropdown
 import Hasyr.Task.Apis (deleteTask, updateTaskName)
 import Hasyr.Task.Types (Task, TaskId)
 import Hasyr.Utils.HTML (className, onClick_, (<:>))
@@ -21,6 +24,7 @@ type State =
   { isEditing :: Boolean
   , inputValue :: String
   , taskRD :: RemoteData String Task
+  , isChecked :: Boolean
   }
 
 data Action
@@ -28,9 +32,13 @@ data Action
   | CancelEditing
   | UpdateTaskName String
   | DeleteTask
+  | SelectSelf
   | ReplaceTaskFromParent Task
 
-data Output = TaskEdited Task | TaskDeleted TaskId
+data Output
+  = TaskEdited Task
+  | TaskDeleted TaskId
+  | TaskChecked TaskId Boolean
 
 component :: Component H.HTML (Const Void) Task Output AppM
 component = mkComponent
@@ -38,10 +46,12 @@ component = mkComponent
     { isEditing: false
     , task: input
     , taskRD: NotAsked
+    , isChecked: false
     }
   , eval: mkEval $ defaultEval
     { handleAction = handleAction
-    , receive = handleReceive }
+    , receive = handleReceive
+    }
   , render
   } where
 
@@ -70,35 +80,57 @@ component = mkComponent
         case deleteTaskRD of
           Success _ -> raise $ TaskDeleted task.id
           _ -> pure unit -- TODO: show err message
+    SelectSelf -> do
+      { task, isChecked } <- modify (\st -> st { isChecked = not st.isChecked })
+      raise $ TaskChecked task.id isChecked
     ReplaceTaskFromParent task -> modify_ _{ task = task }
 
   render { task, isEditing, taskRD } =
     H.li [className "task-item"] [
-      H.div [className "columns has-margin-top-10"] [
-        H.div [className "column is-10"] [
-          if isEditing
-          then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
-          else H.p [className $ "title is-4" <:> guard (isLoading taskRD) "has-text-grey-light"] [H.text task.name]
-        ],
-        H.div [className "column"] [
-          if isEditing
-          then
-            H.button [onClick_ \_ -> Just CancelEditing, className "button", disableWhenLoading] [
-              H.span [className "icon"] [
-                H.i [className "ion-md-undo"] []
-              ]
+      H.fieldset [disableWhenLoading] [
+        H.div [className "columns has-margin-top-10"] [
+          H.div [className "column is-narrow"] [
+            H.label [className "checkbox"] [
+              H.input [className "checkbox", P.type_ InputCheckbox, E.onChecked \_ -> Just SelectSelf]
             ]
-          else
-            H.button [onClick_ \_ -> Just StartEditing, className "button", disableWhenLoading] [
-              H.span [className "icon"] [
-                H.i [className "ion-md-create"] []
+          ],
+          H.div [className "column"] [
+            if isEditing
+            then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
+            else H.p [className $ "title is-4" <:> guard (isLoading taskRD) "has-text-grey-light"] [H.text task.name]
+          ],
+          H.div [className "column is-narrow"] [
+            H.div [className "field has-addons"] [
+              H.p [className "control"] [
+                if isEditing
+                then
+                  H.button [onClick_ \_ -> Just CancelEditing, className "button is-borderless is-text"] [
+                    H.span [className "icon"] [
+                      H.i [className "ion-md-undo"] []
+                    ]
+                  ]
+                else
+                  H.button [onClick_ \_ -> Just StartEditing, className "button is-borderless is-text"] [
+                    H.span [className "icon"] [
+                      H.i [className "ion-md-create"] []
+                    ]
+                  ]
+              ],
+              H.p [className "control"] [
+                H.slot _dropdown unit Dropdown.component {
+                  dropdownTrigger:
+                    H.button [className "button is-borderless is-danger is-inverted"] [
+                      H.span [className "icon"] [
+                        H.i [className "ion-md-trash"] []
+                      ]
+                    ],
+                  dropdownContent:
+                    H.div_ [
+                      H.text "Are you sure bro?",
+                      H.button [onClick_ \_ -> Just DeleteTask, className "button is-text"] [H.text "Yeah"]
+                    ]
+                } (const Nothing)
               ]
-            ]
-        ],
-        H.div [className "column"] [
-          H.button [onClick_ \_ -> Just DeleteTask, className "button", disableWhenLoading] [
-            H.span [className "icon"] [
-              H.i [className "ion-md-trash"] []
             ]
           ]
         ]
@@ -113,6 +145,7 @@ component = mkComponent
     disableWhenLoading = P.disabled (isLoading taskRD)
 
 _asyncInput = SProxy :: SProxy "asyncInput"
+_dropdown = SProxy :: SProxy "dropdown"
 
 handleAsyncInputOutput :: AsyncInput.Output -> Maybe Action
 handleAsyncInputOutput = case _ of

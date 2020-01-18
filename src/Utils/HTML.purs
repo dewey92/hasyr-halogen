@@ -25,3 +25,6 @@ infixl 6 appendClassName as <:>
 -- | https://github.com/slamdata/purescript-halogen/issues/426#issuecomment-320390523
 onClick_ :: ∀ r i. (Unit -> Maybe i) -> H.IProp (onClick :: ME.MouseEvent | r) i
 onClick_ fn = E.onClick (fn <<< unsafePerformEffect <<< preventDefault <<< ME.toEvent)
+
+whenElem :: ∀ w i. Boolean -> (Unit -> H.HTML w i) -> H.HTML w i
+whenElem cond fn = if cond then fn unit else H.text ""
