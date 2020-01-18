@@ -15,15 +15,14 @@ import Hasyr.Utils.HTML (className, (<:>))
 import Network.RemoteData (RemoteData(..), isLoading)
 import Web.UIEvent.KeyboardEvent as KE
 
-type Base e a =
-  ( name :: String
+type State e a = { inputValue :: String, input :: Input e a }
+
+type Input e a =
+  { initialValue :: String
+  , name :: String
   , placeholder :: String
   , asyncStatus :: RemoteData e a
-  )
-
-type State e a = { inputValue :: String | Base e a }
-
-type Input e a = { initialValue :: String | Base e a }
+  }
 
 data Action e a
   = UpdateInput String
@@ -36,8 +35,7 @@ data Query q = ResetInput q
 
 component :: ∀ e a m. Component H.HTML Query (Input e a) Output m
 component = mkComponent
-  { initialState: \{ name, placeholder, initialValue, asyncStatus } ->
-    { name, placeholder, asyncStatus, inputValue: initialValue }
+  { initialState: \input -> { inputValue: input.initialValue, input }
   , eval: mkEval $ defaultEval
     { handleAction = handleAction
     , handleQuery = handleQuery
@@ -49,8 +47,7 @@ component = mkComponent
   receive = Just <<< SyncState
 
   handleAction = case _ of
-    SyncState { name, placeholder, asyncStatus } -> do
-      modify_ _{ name = name, placeholder = placeholder, asyncStatus = asyncStatus }
+    SyncState input -> modify_ _{ input = input }
     UpdateInput val -> modify_ _{ inputValue = val }
     DetectKeyUp e -> case KE.key e of
       "Enter" -> do
@@ -64,19 +61,19 @@ component = mkComponent
     modify_ _{ inputValue = "" }
     pure (Just next)
 
-  render { inputValue, name, placeholder, asyncStatus } =
-    H.div [className $ "control has-icons-right" <:> cxControl asyncStatus] [
+  render { inputValue, input } =
+    H.div [className $ "control has-icons-right" <:> cxControl input.asyncStatus] [
       H.input [
-        className $ "input" <:> cxInput asyncStatus,
+        className $ "input" <:> cxInput input.asyncStatus,
         P.value inputValue,
-        P.name name,
-        P.placeholder placeholder,
+        P.name input.name,
+        P.placeholder input.placeholder,
         P.autofocus true,
-        P.disabled (isLoading asyncStatus),
+        P.disabled (isLoading input.asyncStatus),
         E.onValueChange (Just <<< UpdateInput),
         E.onKeyUp (Just <<< DetectKeyUp)
       ],
-      case asyncStatus of
+      case input.asyncStatus of
         (Success _) -> H.span [className "icon is-small is-right"] [H.i [className "fas fa-check"] []]
         (Failure _) -> H.span [className "icon is-small is-right"] [H.i [className "fas fa-exclamation-triangle"] []]
         _ -> H.text ""
