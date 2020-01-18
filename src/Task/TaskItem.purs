@@ -38,7 +38,7 @@ data Action
 data Output
   = TaskEdited Task
   | TaskDeleted TaskId
-  | TaskChecked TaskId Boolean
+  | TaskSelectToggled TaskId Boolean
 
 component :: Component H.HTML (Const Void) Task Output AppM
 component = mkComponent
@@ -82,7 +82,7 @@ component = mkComponent
           _ -> pure unit -- TODO: show err message
     SelectSelf -> do
       { task, isChecked } <- modify (\st -> st { isChecked = not st.isChecked })
-      raise $ TaskChecked task.id isChecked
+      raise $ TaskSelectToggled task.id isChecked
     ReplaceTaskFromParent task -> modify_ _{ task = task }
 
   render { task, isEditing, taskRD } =

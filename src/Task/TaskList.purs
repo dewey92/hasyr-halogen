@@ -90,6 +90,6 @@ handleTaskItemOutput :: TaskItem.Output -> Maybe Action
 handleTaskItemOutput = case _ of
   TaskItem.TaskEdited task -> Just $ EditTask task
   TaskItem.TaskDeleted taskId -> Just $ DeleteTask taskId
-  TaskItem.TaskChecked taskId isSelected -> case isSelected of
+  TaskItem.TaskSelectToggled taskId isSelected -> case isSelected of
     true -> Just $ SelectTask taskId
     false -> Just $ DeselectTask taskId
