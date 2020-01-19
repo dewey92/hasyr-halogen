@@ -15,9 +15,14 @@
   }
 }
 
-.delete-confirmation {
+.delete-item-modal {
+  .modal-content {
+    max-width: 500px;
+  }
+}
+
+.delete-item-content {
   background: white;
-  text-align: center;
-  padding: 30px;
+  padding: 20px;
   border-radius: 4px;
 }

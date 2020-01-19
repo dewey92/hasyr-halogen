@@ -123,19 +123,23 @@ component = mkComponent
         ],
         -- Place modal inside fieldset to have buttons disabled automatically
         -- when sending remote data
-        Modal.block {
-          modalShown: showDeleteModal,
-          onClose: \_ -> Just HideDeleteModal,
-          content:
-            H.div [className "flex delete-confirmation"] [
-              H.div [className "subtitle is-4 has-margin-bottom-15"] [
-                H.text "You sure want to delete, bro?"
+        Modal.block $ Modal.defaultProps {
+          modalShown = showDeleteModal,
+          rootClassNames = "delete-item-modal",
+          onClose = \_ -> Just HideDeleteModal,
+          content =
+            H.div [className "flex delete-item-content"] [
+              H.div [className "title is-5"] [
+                H.text $ "\"" <> task.name <> "\"" <> "will be permanently deleted."
               ],
-              H.div [className "buttons justify-center"] [
-                H.button [onClick_ \_ -> Just DeleteTask, className "button is-danger is-light" ] [
+              H.div [className "subtitle is-6"] [
+                H.text "You won't be able to undo this action"
+              ],
+              H.div [className "buttons justify-flex-end"] [
+                H.button [onClick_ \_ -> Just DeleteTask, className "button is-danger is-light is-small" ] [
                   H.text "Confirm delete"
                 ],
-                H.button [onClick_ \_ -> Just HideDeleteModal, className "button" ] [
+                H.button [onClick_ \_ -> Just HideDeleteModal, className "button is-small" ] [
                   H.text "Cancel"
                 ]
               ]
