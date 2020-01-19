@@ -5,8 +5,7 @@ import Prelude
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Effect.Aff (Milliseconds(..), delay)
-import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (class MonadEffect)
 import Effect.Class.Console (errorShow)
 import Halogen (Component, defaultEval, mkComponent, mkEval, modify_, query, raise, tell)
 import Halogen.HTML as H
@@ -23,7 +22,7 @@ data Action = AddNewTask String
 data Output = NewTaskAdded Task
 
 component :: ∀ m.
-  MonadAff m =>
+  MonadEffect m =>
   ManageTasks m =>
   Component H.HTML (Const Void) {} Output m
 component = mkComponent
@@ -40,7 +39,6 @@ component = mkComponent
       Success newTask -> do
         void $ query _asyncInput unit $ tell AsyncInput.ResetInput
         raise $ NewTaskAdded newTask
-        liftAff $ delay (Milliseconds 2000.0)
         modify_ _{ addTaskRD = NotAsked }
       Failure e -> errorShow $ "Error: " <> e
       _ -> pure unit

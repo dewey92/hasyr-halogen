@@ -6,7 +6,7 @@ import Data.Array (filter, null)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
-import Effect.Aff.Class (class MonadAff)
+import Effect.Class (class MonadEffect)
 import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, put)
 import Halogen.HTML as H
 import Hasyr.Task.AddTask as AddTask
@@ -33,7 +33,7 @@ data Action
   | DeselectTask TaskId
 
 component :: ∀ m.
-  MonadAff m =>
+  MonadEffect m =>
   ManageTasks m =>
   Component H.HTML (Const Void) {} Void m
 component = mkComponent

@@ -14,7 +14,7 @@ import Effect.Aff (Aff, Milliseconds(..), delay)
 ajaxGet :: AX.URL -> Aff (Either String Json)
 ajaxGet url = do
   rawResult <- AX.get Format.json url
-  delay (Milliseconds 3000.0) -- not too fast, I want to show loading indicator
+  delay (Milliseconds 2000.0) -- not too fast, I want to show loading indicator
   pure $ do
     { body } <- lmap AX.printError rawResult
     pure body
