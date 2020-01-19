@@ -25,7 +25,7 @@ main = HA.runHalogenAff do
     env :: Env
     env = {}
 
-    rootComponent :: H.Component HH.HTML (Const Void) {} {} Aff
+    rootComponent :: H.Component HH.HTML (Const Void) {} Void Aff
     rootComponent = H.hoist (runAppM env) Container.component
 
   appEl <- liftEffect $ querySelector (QuerySelector "#app") (toParentNode body)

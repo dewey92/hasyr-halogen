@@ -6,13 +6,12 @@ import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
 import Effect.Aff (Milliseconds(..), delay)
-import Effect.Aff.Class (liftAff)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class.Console (errorShow)
 import Halogen (Component, defaultEval, mkComponent, mkEval, modify_, query, raise, tell)
 import Halogen.HTML as H
-import Hasyr.AppM (AppM)
 import Hasyr.Components.AsyncInput as AsyncInput
-import Hasyr.Task.Apis (addTask)
+import Hasyr.Task.Apis (class ManageTasks, addTask)
 import Hasyr.Task.Types (Task)
 import Network.RemoteData (RemoteData(..))
 import Network.RemoteData as RD
@@ -23,7 +22,10 @@ data Action = AddNewTask String
 
 data Output = NewTaskAdded Task
 
-component :: Component H.HTML (Const Void) {} Output AppM
+component :: ∀ m.
+  MonadAff m =>
+  ManageTasks m =>
+  Component H.HTML (Const Void) {} Output m
 component = mkComponent
   { initialState: const { addTaskRD: NotAsked }
   , eval: mkEval $ defaultEval { handleAction = handleAction }

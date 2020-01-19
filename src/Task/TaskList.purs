@@ -6,11 +6,11 @@ import Data.Array (filter, null)
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Effect.Aff.Class (class MonadAff)
 import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify_, put)
 import Halogen.HTML as H
-import Hasyr.AppM (AppM)
 import Hasyr.Task.AddTask as AddTask
-import Hasyr.Task.Apis (getAllTasks)
+import Hasyr.Task.Apis (class ManageTasks, getAllTasks)
 import Hasyr.Task.TaskItem as TaskItem
 import Hasyr.Task.Types (Task, Tasks, TaskId)
 import Hasyr.Utils.HTML (whenElem)
@@ -32,7 +32,10 @@ data Action
   | SelectTask TaskId
   | DeselectTask TaskId
 
-component :: Component H.HTML (Const Void) {} {} AppM
+component :: ∀ m.
+  MonadAff m =>
+  ManageTasks m =>
+  Component H.HTML (Const Void) {} Void m
 component = mkComponent
   { initialState: const { tasksRD: NotAsked, tasks: [], selectedTaskIds: [] }
   , eval: mkEval $ defaultEval

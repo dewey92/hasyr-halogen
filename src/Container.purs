@@ -5,15 +5,19 @@ import Prelude
 import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Symbol (SProxy(..))
+import Effect.Aff.Class (class MonadAff)
 import Halogen (Component, defaultEval, mkComponent, mkEval)
 import Halogen.HTML as H
-import Hasyr.AppM (AppM)
+import Hasyr.Task.Apis (class ManageTasks)
 import Hasyr.Task.TaskList as TaskList
 import Hasyr.Utils.HTML (className)
 
 _taskList = SProxy :: SProxy "taskList"
 
-component :: Component H.HTML (Const Void) {} {} AppM
+component :: ∀ m.
+  MonadAff m =>
+  ManageTasks m =>
+  Component H.HTML (Const Void) {} Void m
 component = mkComponent
   { initialState: const unit
   , eval: mkEval defaultEval

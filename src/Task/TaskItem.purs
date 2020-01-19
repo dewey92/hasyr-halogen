@@ -7,14 +7,14 @@ import Data.Const (Const)
 import Data.Maybe (Maybe(..))
 import Data.Monoid (guard)
 import Data.Symbol (SProxy(..))
+import Effect.Class (class MonadEffect)
 import Halogen (Component, defaultEval, get, mkComponent, mkEval, modify, modify_, raise)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
-import Hasyr.AppM (AppM)
 import Hasyr.Components.AsyncInput as AsyncInput
 import Hasyr.Components.Modal as Modal
-import Hasyr.Task.Apis (deleteTask, updateTaskName)
+import Hasyr.Task.Apis (class ManageTasks, deleteTask, updateTaskName)
 import Hasyr.Task.Types (Task, TaskId)
 import Hasyr.Utils.HTML (className, onClick_, (<:>))
 import Network.RemoteData (RemoteData(..), isLoading)
@@ -43,7 +43,7 @@ data Output
   | TaskDeleted TaskId
   | TaskSelectToggled TaskId Boolean
 
-component :: Component H.HTML (Const Void) Task Output AppM
+component :: ∀ m. MonadEffect m => ManageTasks m => Component H.HTML (Const Void) Task Output m
 component = mkComponent
   { initialState: \input ->
     { isEditing: false
@@ -111,21 +111,6 @@ component = mkComponent
           ],
           H.div [className "column is-narrow"] [
             H.div [className "field has-addons"] [
-              H.p [className "control"] [
-                if isEditing
-                then
-                  H.button [onClick_ \_ -> Just CancelEditing, className "button is-borderless is-text"] [
-                    H.span [className "icon"] [
-                      H.i [className "ion-md-undo"] []
-                    ]
-                  ]
-                else
-                  H.button [onClick_ \_ -> Just StartEditing, className "button is-borderless is-text"] [
-                    H.span [className "icon"] [
-                      H.i [className "ion-md-create"] []
-                    ]
-                  ]
-              ],
               H.p [className "control"] [
                 H.button [onClick_ \_ -> Just ShowDeleteModal, className "button is-borderless is-danger is-inverted"] [
                   H.span [className "icon"] [
