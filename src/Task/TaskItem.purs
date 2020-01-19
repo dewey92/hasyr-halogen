@@ -13,8 +13,6 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import Hasyr.AppM (AppM)
 import Hasyr.Components.AsyncInput as AsyncInput
-import Hasyr.Components.Card as Card
-import Hasyr.Components.Dropdown as Dropdown
 import Hasyr.Components.Modal as Modal
 import Hasyr.Task.Apis (deleteTask, updateTaskName)
 import Hasyr.Task.Types (Task, TaskId)
