@@ -2,15 +2,25 @@
   "tasks": [
     {
       "id": 1,
-      "name": "Task 1"
+      "name": "Play with Razan",
+      "meta": {
+        "dueDate": "2020-01-19 17:39:00.000Z",
+        "note": "Play with truck, bus. Watch trains as well."
+      },
+      "createdAt": "2020-01-19 13:00:00.000Z"
     },
     {
       "id": 2,
-      "name": "Task 2"
+      "name": "Exercise 15 mins",
+      "createdAt": "2020-01-19 13:01:00.000Z"
     },
     {
       "id": 3,
-      "name": "Task 3"
+      "name": "Task 3",
+      "meta": {
+        "dueDate": "2020-01-19 21:15:00.000Z"
+      },
+      "createdAt": "2020-01-19 13:02:00.000Z"
     }
   ]
 }
