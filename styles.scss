@@ -5,6 +5,16 @@
   margin: auto;
 }
 
+.task-name {
+  &:hover {
+    cursor: text;
+    background: #efefef;
+    border-radius: 4px;
+    margin: -5px;
+    padding: 5px;
+  }
+}
+
 .delete-confirmation {
   background: white;
   text-align: center;

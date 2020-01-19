@@ -92,7 +92,7 @@ component = mkComponent
   render { task, isEditing, taskRD, showDeleteModal } =
     H.li [className "task-item"] [
       H.fieldset [disableWhenLoading] [
-        H.div [className "columns has-margin-top-10"] [
+        H.div [className "columns is-vcentered has-margin-top-10"] [
           H.div [className "column is-narrow"] [
             H.label [className "checkbox"] [
               H.input [className "checkbox", P.type_ InputCheckbox, E.onChecked \_ -> Just SelectSelf]
@@ -101,7 +101,13 @@ component = mkComponent
           H.div [className "column"] [
             if isEditing
             then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
-            else H.p [className $ "title is-4" <:> guard (isLoading taskRD) "has-text-grey-light"] [H.text task.name]
+            else
+              H.p [
+                className $ "title is-4 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
+                onClick_ \_ -> Just StartEditing
+              ] [
+                H.text task.name
+              ]
           ],
           H.div [className "column is-narrow"] [
             H.div [className "field has-addons"] [
@@ -166,3 +172,4 @@ handleAsyncInputOutput :: AsyncInput.Output -> Maybe Action
 handleAsyncInputOutput = case _ of
   AsyncInput.EnterPressed val -> Just $ UpdateTaskName val
   AsyncInput.EscPressed -> Just CancelEditing
+  AsyncInput.InputBlurred -> Just CancelEditing
