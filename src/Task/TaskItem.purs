@@ -92,7 +92,7 @@ component = mkComponent
   render { task, isEditing, taskRD, showDeleteModal } =
     H.li [className "task-item"] [
       H.fieldset [disableWhenLoading] [
-        H.div [className "columns is-vcentered has-margin-top-10"] [
+        H.div [className "columns is-vcentered is-variable is-2 no-vmargin"] [
           H.div [className "column is-narrow"] [
             H.label [className "checkbox"] [
               H.input [className "checkbox", P.type_ InputCheckbox, E.onChecked \_ -> Just SelectSelf]

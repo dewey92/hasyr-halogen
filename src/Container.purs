@@ -25,13 +25,11 @@ component = mkComponent
 
   render _ =
     H.div [className "root"] [
-      H.div [className "columns"] [
-        H.div [className "column"] [],
+      H.div [className "columns is-centered"] [
         H.div [className "column is-half"] [
           H.section_ [
             H.slot _taskList unit TaskList.component {} (const Nothing)
           ]
-        ],
-        H.div [className "column"] []
+        ]
       ]
     ]
