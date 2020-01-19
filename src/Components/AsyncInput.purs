@@ -27,7 +27,7 @@ type Input e a =
 data Action e a
   = UpdateInput String
   | DetectKeyUp KE.KeyboardEvent
-  | SyncState (Input e a)
+  | Receive (Input e a)
 
 data Output = EnterPressed String | EscPressed
 
@@ -39,15 +39,13 @@ component = mkComponent
   , eval: mkEval $ defaultEval
     { handleAction = handleAction
     , handleQuery = handleQuery
-    , receive = receive
+    , receive = Just <<< Receive
     }
   , render
   } where
 
-  receive = Just <<< SyncState
-
   handleAction = case _ of
-    SyncState input -> modify_ _{ input = input }
+    Receive input -> modify_ _{ input = input }
     UpdateInput val -> modify_ _{ inputValue = val }
     DetectKeyUp e -> case KE.key e of
       "Enter" -> do

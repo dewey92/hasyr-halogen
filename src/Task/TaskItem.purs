@@ -33,7 +33,7 @@ data Action
   | UpdateTaskName String
   | DeleteTask
   | SelectSelf
-  | ReplaceTaskFromParent Task
+  | Receive Task
 
 data Output
   = TaskEdited Task
@@ -50,12 +50,10 @@ component = mkComponent
     }
   , eval: mkEval $ defaultEval
     { handleAction = handleAction
-    , receive = handleReceive
+    , receive = Just <<< Receive
     }
   , render
   } where
-
-  handleReceive = Just <<< ReplaceTaskFromParent
 
   handleAction = case _ of
     StartEditing -> modify_ _{ isEditing = true }
@@ -83,7 +81,7 @@ component = mkComponent
     SelectSelf -> do
       { task, isChecked } <- modify (\st -> st { isChecked = not st.isChecked })
       raise $ TaskSelectToggled task.id isChecked
-    ReplaceTaskFromParent task -> modify_ _{ task = task }
+    Receive task -> modify_ _{ task = task }
 
   render { task, isEditing, taskRD } =
     H.li [className "task-item"] [
