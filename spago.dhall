@@ -10,6 +10,7 @@ You can edit this file as you like.
     , "effect"
     , "generics-rep"
     , "halogen"
+    , "js-date"
     , "psci-support"
     , "remotedata"
     ]

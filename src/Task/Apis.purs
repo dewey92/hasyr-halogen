@@ -8,13 +8,12 @@ module Hasyr.Task.Apis
 
 import Prelude
 
-import Data.Argonaut (Json, decodeJson)
 import Data.Bifunctor (rmap)
 import Data.Either (Either)
 import Effect.Aff (Aff)
 import Halogen (HalogenM, lift, liftAff)
 import Hasyr.AppM (AppM)
-import Hasyr.Task.Types (Task, Tasks, TaskId)
+import Hasyr.Task.Types (Task, TaskId, Tasks, decodeTask, decodeTasks)
 import Hasyr.Utils.HTTP (ajaxDelete, ajaxGet, ajaxPatch, ajaxPost)
 
 class Monad m <= ManageTasks m where
@@ -35,29 +34,23 @@ instance manageTasksHalogenM :: ManageTasks m => ManageTasks (HalogenM st act cs
   updateTaskName id name = lift $ updateTaskName id name
   deleteTask = lift <<< deleteTask
 
-taskFromJson :: Json -> Either String Task
-taskFromJson = decodeJson
-
-tasksFromJson :: Json -> Either String Tasks
-tasksFromJson = decodeJson
-
 fakeServerGetTasks :: Aff (Either String Tasks)
 fakeServerGetTasks = do
   let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks"
   tasksJson <- ajaxGet fakeUrl
-  pure $ tasksJson >>= tasksFromJson
+  pure $ tasksJson >>= decodeTasks
 
 fakeServerAddTask :: String -> Aff (Either String Task)
 fakeServerAddTask taskName = do
   let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks"
   taskJson <- ajaxPost fakeUrl { name: taskName }
-  pure $ taskJson >>= taskFromJson
+  pure $ taskJson >>= decodeTask
 
 fakeServerUpdateTaskName :: TaskId -> String -> Aff (Either String Task)
 fakeServerUpdateTaskName taskId taskName = do
   let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks/" <> show taskId
   taskJson <- ajaxPatch fakeUrl { name: taskName }
-  pure $ taskJson >>= taskFromJson
+  pure $ taskJson >>= decodeTask
 
 fakeServerDeleteTask :: TaskId -> Aff (Either String Unit)
 fakeServerDeleteTask taskId = do

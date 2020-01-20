@@ -89,7 +89,7 @@ component = mkComponent
       raise $ TaskSelectToggled task.id isChecked
     Receive task -> modify_ _{ task = task }
 
-  render { task, isEditing, taskRD, showDeleteModal } =
+  render state@{ task, taskRD, showDeleteModal } =
     H.li [className "task-item"] [
       H.fieldset [disableWhenLoading] [
         H.div [className "columns is-vcentered is-variable is-2 no-vmargin"] [
@@ -99,15 +99,7 @@ component = mkComponent
             ]
           ],
           H.div [className "column"] [
-            if isEditing
-            then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
-            else
-              H.p [
-                className $ "title is-4 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
-                onClick_ \_ -> Just StartEditing
-              ] [
-                H.text task.name
-              ]
+            renderTaskDetails state
           ],
           H.div [className "column is-narrow"] [
             H.div [className "field has-addons"] [
@@ -147,14 +139,24 @@ component = mkComponent
         }
       ]
     ] where
+    disableWhenLoading = P.disabled (isLoading taskRD)
+
+  renderTaskDetails { task, isEditing, taskRD } =
+    if isEditing
+    then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
+    else
+      H.p [
+        className $ "title is-4 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
+        onClick_ \_ -> Just StartEditing
+      ] [
+        H.text task.name
+      ] where
     asyncInputProps = {
       name: "edit-task",
       placeholder: "Edit task",
       initialValue: task.name,
       asyncStatus: taskRD
     }
-    disableWhenLoading = P.disabled (isLoading taskRD)
-
 _asyncInput = SProxy :: SProxy "asyncInput"
 
 handleAsyncInputOutput :: AsyncInput.Output -> Maybe Action
