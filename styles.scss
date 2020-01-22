@@ -18,6 +18,12 @@
   }
 }
 
+.task-item-edit-input:focus {
+  border-color: transparent;
+  box-shadow: none;
+  padding-left: 0;
+}
+
 .task-name {
   &:hover {
     cursor: text;

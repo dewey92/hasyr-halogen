@@ -146,16 +146,17 @@ component = mkComponent
     then H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
     else
       H.p [
-        className $ "title is-4 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
+        className $ "title is-5 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
         onClick_ \_ -> Just StartEditing
       ] [
         H.text task.name
       ] where
-    asyncInputProps = {
-      name: "edit-task",
-      placeholder: "Edit task",
-      initialValue: task.name,
-      asyncStatus: taskRD
+    asyncInputProps = AsyncInput.defaultInput {
+      name = "edit-task",
+      placeholder = "Edit task",
+      initialValue = task.name,
+      asyncStatus = taskRD,
+      inputClassName = "is-borderless task-item-edit-input"
     }
 _asyncInput = SProxy :: SProxy "asyncInput"
 

@@ -12,6 +12,7 @@ import Halogen.HTML as H
 import Hasyr.Components.AsyncInput as AsyncInput
 import Hasyr.Task.Apis (class ManageTasks, addTask)
 import Hasyr.Task.Types (Task)
+import Hasyr.Utils.HTML (className)
 import Network.RemoteData (RemoteData(..))
 import Network.RemoteData as RD
 
@@ -44,14 +45,16 @@ component = mkComponent
       _ -> pure unit
 
   render { addTaskRD } =
-    H.section_ [
-      H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
+    H.section [className "columns"] [
+      H.div [className "column"] [
+        H.slot _asyncInput unit AsyncInput.component asyncInputProps handleAsyncInputOutput
+      ]
     ] where
-    asyncInputProps = {
-      name: "add-new-task",
-      placeholder: "What needs to be done?",
-      initialValue: "",
-      asyncStatus: addTaskRD
+    asyncInputProps = AsyncInput.defaultInput {
+      name = "add-new-task",
+      placeholder = "What needs to be done?",
+      asyncStatus = addTaskRD,
+      iconLeftClassName = Just "ion-md-add"
     }
 
 _asyncInput = SProxy :: SProxy "asyncInput"

@@ -2,7 +2,7 @@ module Hasyr.Utils.HTML where
 
 import Prelude
 
-import Data.Maybe (Maybe)
+import Data.Maybe (Maybe, maybe)
 import Effect.Unsafe (unsafePerformEffect)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
@@ -28,3 +28,6 @@ onClick_ fn = E.onClick (fn <<< unsafePerformEffect <<< preventDefault <<< ME.to
 
 whenElem :: ∀ w i. Boolean -> (Unit -> H.HTML w i) -> H.HTML w i
 whenElem cond fn = if cond then fn unit else H.text ""
+
+maybeElem :: ∀ a w i. Maybe a -> (a -> H.HTML w i) -> H.HTML w i
+maybeElem mayB fn = maybe (H.text "") fn mayB
