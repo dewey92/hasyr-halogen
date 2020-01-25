@@ -34,26 +34,27 @@ instance manageTasksHalogenM :: ManageTasks m => ManageTasks (HalogenM st act cs
   updateTaskName id name = lift $ updateTaskName id name
   deleteTask = lift <<< deleteTask
 
+baseFakeUrl :: String
+baseFakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks"
+
 fakeServerGetTasks :: Aff (Either String Tasks)
 fakeServerGetTasks = do
-  let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks"
-  tasksJson <- ajaxGet fakeUrl
+  tasksJson <- ajaxGet baseFakeUrl
   pure $ tasksJson >>= decodeTasks
 
 fakeServerAddTask :: String -> Aff (Either String Task)
 fakeServerAddTask taskName = do
-  let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks"
-  taskJson <- ajaxPost fakeUrl { name: taskName }
+  taskJson <- ajaxPost baseFakeUrl { name: taskName }
   pure $ taskJson >>= decodeTask
 
 fakeServerUpdateTaskName :: TaskId -> String -> Aff (Either String Task)
 fakeServerUpdateTaskName taskId taskName = do
-  let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks/" <> show taskId
+  let fakeUrl = baseFakeUrl<> show taskId
   taskJson <- ajaxPatch fakeUrl { name: taskName }
   pure $ taskJson >>= decodeTask
 
 fakeServerDeleteTask :: TaskId -> Aff (Either String Unit)
 fakeServerDeleteTask taskId = do
-  let fakeUrl = "https://my-json-server.typicode.com/dewey92/hasyr-halogen/tasks/" <> show taskId
+  let fakeUrl = baseFakeUrl <> show taskId
   _del <- ajaxDelete fakeUrl
   pure $ rmap (const unit) _del
