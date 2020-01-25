@@ -2,15 +2,16 @@ module Hasyr.Task.Types where
 
 import Prelude
 
-import Data.Argonaut (Json, decodeJson, (.:), (.:?))
-import Data.Argonaut.Decode.Class (decodeJArray)
-import Data.Bifunctor (lmap)
-import Data.DateTime (DateTime)
+import Data.Argonaut (class DecodeJson, class EncodeJson, Json, encodeJson)
+import Data.Argonaut.Decode.Struct.Tolerant as AT
+import Data.DateTime as DT
 import Data.Either (Either(..), note)
-import Data.JSDate (isValid, parse, toDateTime)
-import Data.Maybe (Maybe(..))
-import Data.TraversableWithIndex (traverseWithIndex)
+import Data.JSDate (fromDateTime, isValid, parse, toDateTime, toUTCString)
+import Data.Maybe (Maybe)
+import Data.Traversable (traverse)
 import Effect.Unsafe (unsafePerformEffect)
+
+newtype DateTime = DateTime DT.DateTime
 
 type Meta =
   { note :: Maybe String
@@ -24,7 +25,6 @@ type Task =
   , name :: String
   , meta :: Meta
   , createdAt :: DateTime
-  -- , updatedAt :: DateTime
   }
 
 type Tasks = Array Task
@@ -33,35 +33,24 @@ dateTimeFromString :: String -> Either String DateTime
 dateTimeFromString str = unsafePerformEffect $ do
   jsDate <- parse str
   pure $ if isValid jsDate
-    then toDateTime jsDate # note "Invalid date format"
+    then DateTime <$> toDateTime jsDate # note "Invalid date format"
     else Left "Invalid date format"
 
+dateTimeToString :: DateTime -> String
+dateTimeToString (DateTime dt) = fromDateTime dt # toUTCString
+
+instance decodeJsonDateTime :: DecodeJson DateTime where
+  decodeJson = AT.decodeJson >=> dateTimeFromString
+
+instance encodeJsonDateTime :: EncodeJson DateTime where
+  encodeJson = encodeJson <<< dateTimeToString
+
 decodeMeta :: Json -> Either String Meta
-decodeMeta json = do
-  obj <- decodeJson json
-  note <- obj .:? "note"
-  dueDate' <- obj .:? "dueDate"
-  dueDate <- case dueDate' of
-    Nothing -> pure Nothing
-    Just str -> Just <$> dateTimeFromString str
-  pure { note, dueDate }
+decodeMeta = AT.decodeJson
 
 decodeTask :: Json -> Either String Task
-decodeTask json = do
-  obj <- decodeJson json
-  id <- obj .: "id"
-  name <- obj .: "name"
-  meta' <- obj .:? "meta"
-  meta <- case meta' of
-    Nothing -> pure { note: Nothing, dueDate: Nothing }
-    Just metaJson -> decodeMeta metaJson
-  createdAt <- dateTimeFromString =<< obj .: "createdAt"
-  pure $ { id, name, meta, createdAt }
+decodeTask = AT.decodeJsonPer
+  { meta: AT.decodeJson >=> decodeMeta }
 
 decodeTasks :: Json -> Either String Tasks
-decodeTasks = do
-  lmap ("Couldn't decode Array (" <> _)
-  <<< (traverseWithIndex f <=< decodeJArray)
-  where
-    msg i m = "Failed at index " <> show i <> "): " <> m
-    f i = lmap (msg i) <<< decodeTask
+decodeTasks = AT.decodeJson >=> traverse decodeTask

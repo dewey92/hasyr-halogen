@@ -13,6 +13,7 @@ You can edit this file as you like.
     , "js-date"
     , "psci-support"
     , "remotedata"
+    , "tolerant-argonaut"
     ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]

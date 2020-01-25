@@ -14,7 +14,7 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import Hasyr.Components.AsyncInput as AsyncInput
 import Hasyr.Components.Modal as Modal
-import Hasyr.Task.Apis (class ManageTasks, deleteTask, updateTaskName)
+import Hasyr.Task.Apis (class ManageTasks, deleteTask, updateTask)
 import Hasyr.Task.Types (Task, TaskId)
 import Hasyr.Utils.HTML (className, onClick_, (<:>))
 import Network.RemoteData (RemoteData(..), isLoading)
@@ -65,7 +65,7 @@ component = mkComponent
     UpdateTaskName newName -> do
       modify_ _{ taskRD = Loading }
       { task } <- get
-      updateTaskRD <- RD.fromEither <$> updateTaskName task.id newName
+      updateTaskRD <- RD.fromEither <$> updateTask (task { name = newName })
       modify_ _{ taskRD = updateTaskRD }
       case updateTaskRD of
         Success newlyEditedTask -> do

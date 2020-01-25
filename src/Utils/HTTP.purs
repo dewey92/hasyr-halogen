@@ -28,6 +28,15 @@ ajaxPost url payload = do
     { body } <- lmap AX.printError rawResult
     pure body
 
+ajaxPut :: ∀ a. EncodeJson a => AX.URL -> a -> Aff (Either String Json)
+ajaxPut url payload = do
+  let jsonPayload = RB.Json $ encodeJson payload
+  rawResult <- AX.put Format.json url (Just jsonPayload)
+  delay (Milliseconds 1500.0) -- not too fast, I want to show loading indicator
+  pure $ do
+    { body } <- lmap AX.printError rawResult
+    pure body
+
 ajaxPatch :: ∀ a. EncodeJson a => AX.URL -> a -> Aff (Either String Json)
 ajaxPatch url payload = do
   let jsonPayload = RB.Json $ encodeJson payload
