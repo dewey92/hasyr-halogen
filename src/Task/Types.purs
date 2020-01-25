@@ -30,11 +30,10 @@ type Task =
 type Tasks = Array Task
 
 dateTimeFromString :: String -> Either String DateTime
-dateTimeFromString str = unsafePerformEffect $ do
-  jsDate <- parse str
-  pure $ if isValid jsDate
-    then DateTime <$> toDateTime jsDate # note "Invalid date format"
-    else Left "Invalid date format"
+dateTimeFromString str
+  | jsDate <- unsafePerformEffect $ parse str
+  , isValid jsDate = DateTime <$> toDateTime jsDate # note "Invalid date format"
+  | otherwise      = Left "Invalid date format"
 
 dateTimeToString :: DateTime -> String
 dateTimeToString (DateTime dt) = fromDateTime dt # toUTCString
