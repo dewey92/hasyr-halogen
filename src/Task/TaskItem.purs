@@ -8,9 +8,9 @@ import Data.Foldable (fold, for_)
 import Data.Maybe (Maybe(..))
 import Data.Monoid (guard)
 import Data.Symbol (SProxy(..))
-import Effect.Aff.Class (class MonadAff)
+import Effect.Aff (Milliseconds(..), delay)
+import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
-import Effect.Console (logShow)
 import Halogen (Component, RefLabel(..), SubscriptionId, defaultEval, get, getHTMLElementRef, mkComponent, mkEval, modify, modify_, raise, subscribe, unsubscribe)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
@@ -76,18 +76,17 @@ component = mkComponent
 
   handleAction = case _ of
     AddOutsideClickListener -> do
+      liftAff $ delay (Milliseconds 100.0) -- delay until `TaskDetails` finishes rendering
       doc <- liftEffect $ window >>= document <#> toEventTarget
-      sId <- subscribe $ eventListenerEventSource (ET.click) doc (\ev -> Just $ DetectOutsideClick ev)
+      sId <- subscribe $ eventListenerEventSource (ET.click) doc (Just <<< DetectOutsideClick)
       modify_ _{ outsideClickId = Just sId }
     DetectOutsideClick ev -> do
       { task, isEditing } <- get
       elemMaybe <- getHTMLElementRef (RefLabel $ "task-item-root-" <> show task.id)
       for_ elemMaybe \elem -> do
         detected <- liftEffect $ isClickOutside ev elem
-        liftEffect $ logShow [show detected, show task.id]
         if detected && isEditing
-          -- FIXME: currently `detected` is always true, not sure why
-          then pure unit -- handleAction CancelEditing
+          then handleAction CancelEditing
           else pure unit
     RemoveOutsideClickListener -> do
       { outsideClickId } <- get
@@ -127,7 +126,10 @@ component = mkComponent
     Receive task -> modify_ _{ task = task }
 
   render state@{ task, isEditing, taskRD, showDeleteModal } =
-    H.li [P.ref (RefLabel $ "task-item-root-" <> show task.id), className $ "task-item" <:> guard isEditing "is-editing"] [
+    H.li [
+      P.ref (RefLabel $ "task-item-root-" <> show task.id),
+      className $ "task-item" <:> guard isEditing "is-editing"
+    ] [
       H.fieldset [disableWhenLoading] [
         H.div [className "columns is-vcentered is-variable is-2 no-vmargin"] [
           H.div [className "column is-narrow"] [
@@ -135,7 +137,7 @@ component = mkComponent
               H.input [className "checkbox", P.type_ InputCheckbox, E.onChecked \_ -> Just SelectSelf]
             ]
           ],
-          H.div [className "column"] [
+          H.div [className "column task-details-column", onClick_ \_ -> Just StartEditing] [
             renderTaskDetails state
           ]
         ],
@@ -185,10 +187,7 @@ component = mkComponent
       ]
     else
       H.div_ [
-        H.p [
-          className $ "title is-5 task-name" <:> guard (isLoading taskRD) "has-text-grey-light",
-          onClick_ \_ -> Just StartEditing
-        ] [
+        H.p [className $ "title is-5 task-name" <:> guard (isLoading taskRD) "has-text-grey-light"] [
           H.text task.name
         ],
         H.p [className "subtitle is-6 has-text-grey"] [

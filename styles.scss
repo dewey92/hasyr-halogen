@@ -19,8 +19,14 @@
     border-bottom: 1px solid #e8e8e8;
   }
 
+  &:hover:not(.is-editing) {
+    background: #fafafa;
+    border-radius: 4px;
+  }
+
   &.is-editing {
     box-shadow: 0px 2px 20px 0px #eee;
+    transition: ease-in-out .25s all;
   }
 
   &.is-editing::after {
@@ -48,15 +54,19 @@
   }
 }
 
-.task-name {
+.task-details-column {
   &:hover {
-    cursor: text;
-    background: #f3f3f3;
-    border-radius: 4px;
-    // margin: -5px;
-    // padding: 5px;
+    cursor: pointer;
   }
 }
+
+// .task-name {
+//   &:hover {
+//     cursor: text;
+//     background: #f3f3f3;
+//     border-radius: 4px;
+//   }
+// }
 
 .delete-item-modal {
   .modal-content {

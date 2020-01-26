@@ -53,9 +53,6 @@ component = mkComponent
           P.rows 1
         ]
       ],
-      -- H.div_ [
-      --   H.text "Like date, repeat, etc"
-      -- ],
       H.div [className "flex has-margin-top-10"] [
         H.div [className "buttons justify-flex-end"] [
           H.button [
