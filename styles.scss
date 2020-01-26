@@ -7,6 +7,8 @@
 
 .task-item {
   position: relative;
+  padding-left: 15px;
+  padding-right: 15px;
 
   &::after {
     content: "";
@@ -16,12 +18,34 @@
     width: 86%;
     border-bottom: 1px solid #e8e8e8;
   }
+
+  &.is-editing {
+    box-shadow: 0px 2px 20px 0px #eee;
+  }
+
+  &.is-editing::after {
+    border-bottom: transparent;
+  }
 }
 
-.task-item-edit-input:focus {
-  border-color: transparent;
-  box-shadow: none;
+.task-item-edit-input {
   padding-left: 0;
+  box-shadow: none;
+
+  &:focus {
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+.task-item-note {
+  padding: 0;
+  box-shadow: none;
+
+  &:focus {
+    border-color: transparent;
+    box-shadow: none;
+  }
 }
 
 .task-name {
@@ -29,8 +53,8 @@
     cursor: text;
     background: #f3f3f3;
     border-radius: 4px;
-    margin: -5px;
-    padding: 5px;
+    // margin: -5px;
+    // padding: 5px;
   }
 }
 

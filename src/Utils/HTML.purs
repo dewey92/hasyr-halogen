@@ -2,12 +2,18 @@ module Hasyr.Utils.HTML where
 
 import Prelude
 
-import Data.Maybe (Maybe, maybe)
+import Data.Maybe (Maybe, fromJust, maybe)
+import Effect (Effect)
 import Effect.Unsafe (unsafePerformEffect)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
-import Web.Event.Event (preventDefault)
+import Partial.Unsafe (unsafePartial)
+import Web.DOM.Node (contains, fromEventTarget)
+import Web.Event.Event (preventDefault, target)
+import Web.Event.Internal.Types as ET
+import Web.HTML (HTMLElement)
+import Web.HTML.HTMLElement (toNode)
 import Web.UIEvent.MouseEvent as ME
 
 className :: ∀ r i. String -> H.IProp ( class :: String | r ) i
@@ -31,3 +37,7 @@ whenElem cond fn = if cond then fn unit else H.text ""
 
 maybeElem :: ∀ a w i. Maybe a -> (a -> H.HTML w i) -> H.HTML w i
 maybeElem mayB fn = maybe (H.text "") fn mayB
+
+isClickOutside :: ET.Event -> HTMLElement -> Effect Boolean
+isClickOutside ev elem = not <$> contains (toNode elem) evTargetNode where
+  evTargetNode = unsafePartial $ fromJust $ fromEventTarget =<< target ev
